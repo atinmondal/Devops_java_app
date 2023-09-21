@@ -10,7 +10,7 @@ pipeline{
         choice(name: 'action', choices: 'create\ndelete', description: 'Choose Create/Destroy')
         string(name:'ImageName',description: 'Name of the docker build', defaultValue: 'javaapp')
         string(name:'ImageTag',description: 'Tag of the docker build', defaultValue: 'v1')
-        string(name:'AppName',description: 'Name of the Application', defaultValue: 'atinspandan')
+        string(name:'dockerHubUser',description: 'Name of the Application', defaultValue: 'atinspandan')
     }
 
     stages{
@@ -76,7 +76,7 @@ pipeline{
             steps{
                 script{
 
-                    dockerBuild("${params.ImageName}","${params.ImageTag}","${params.AppName}")
+                    dockerBuild("${params.ImageName}","${params.ImageTag}","${params.dockerHubUser}")
                 }
             }
         }
