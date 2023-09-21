@@ -8,6 +8,14 @@ pipeline{
 
     stages{
 
+        stage('Unit test maven'){
+            steps{
+                script{
+                    mvnTest()
+                }
+            }
+        }
+
         stage('Git Checkout'){
             steps{
                 gitCheckout(
