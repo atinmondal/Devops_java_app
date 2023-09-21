@@ -5,7 +5,13 @@ pipeline{
         jdk  'jdk11'
         maven  'maven3'
     }
+
+    parameters{
+        choice(name: 'action', choices: 'create\ndelete', description: 'Choose Create/Destroy')
+    }
+
     stages{
+        when { expression { param.action == 'create'}}
         stage('Git Checkout'){
 
             steps{
@@ -17,7 +23,7 @@ pipeline{
         }
 
         stage('Unit Test Maven'){
-
+        when { expression { param.action == 'create'}}
             steps{
                 script{
                     mvnTest()
@@ -26,10 +32,19 @@ pipeline{
         }
 
         stage('Integration Test Maven'){
-
+        when { expression { param.action == 'create'}}
             steps{
                 script{
                     mvnIntegrationTest()
+                }
+            }
+        }
+
+        stage('Static code analysis: Sonarqube'){
+        when { expression { param.action == 'create'}}
+            steps{
+                script{
+                    staticCodeAnalysis()
                 }
             }
         }
