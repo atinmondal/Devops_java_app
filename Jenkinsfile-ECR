@@ -12,6 +12,10 @@ pipeline{
         string(name:'region',description: 'Region of the ECR', defaultValue: 'us-east-1')
         string(name:'ecrRepositoryName',description: 'Name of the ECR', defaultValue: 'jenkins-pipeline')
     }
+    environmet{
+        ACCESS_KEY = credentials('Access_key_ID')
+        SECRET_KEY = credentials('Secret_access_key')
+    }
 
     stages{
         stage('Git Checkout'){
@@ -24,86 +28,101 @@ pipeline{
             }
         }
 
-        stage('Unit Test Maven'){
+        // stage('Unit Test Maven'){
+        // when { expression { params.action == 'create'}}
+        //     steps{
+        //         script{
+        //             mvnTest()
+        //         }
+        //     }
+        // }
+
+        // stage('Integration Test Maven'){
+        // when { expression { params.action == 'create'}}
+        //     steps{
+        //         script{
+        //             mvnIntegrationTest()
+        //         }
+        //     }
+        // }
+
+        // stage('Static code analysis: Sonarqube'){
+        // when { expression { params.action == 'create'}}
+        //     steps{
+        //         script{
+        //             def SonarQubeCredentialsId = 'sonarqube-api'
+        //             staticCodeAnalysis(SonarQubeCredentialsId)
+        //         }
+        //     }
+        // }
+
+        // stage('Quality Gate Status Check: Sonarqube'){
+        // when { expression { params.action == 'create'}}
+        //     steps{
+        //         script{
+        //             def SonarQubeCredentialsId = 'sonarqube-api'
+        //             qualityGateStatus(SonarQubeCredentialsId)
+        //         }
+        //     }
+        // }
+
+        // stage('Maven Build'){
+        // when { expression { params.action == 'create'}}
+        //     steps{
+        //         script{
+        //             mvnBuild()
+        //         }
+        //     }
+        // }
+
+        // stage('Docker Image Build: ECR'){
+        // when { expression { params.action == 'create'}}
+        //     steps{
+        //         script{
+
+        //             dockerBuild("${params.aws_account_id}","${params.region}","${params.ecrRepositoryName}")
+        //         }
+        //     }
+        // }
+
+        // stage('Docker Image Scan Using Trivy for AWS'){
+        // when { expression { params.action == 'create'}}
+        //     steps{
+        //         script{
+
+        //             dockerImageScan("${params.aws_account_id}","${params.region}","${params.ecrRepositoryName}")
+        //         }
+        //     }
+        // }
+        // stage('Docker Image Scan Push: ECR'){
+        // when { expression { params.action == 'create'}}
+        //     steps{
+        //         script{
+        //             dockerImagePush("${params.aws_account_id}","${params.region}","${params.ecrRepositoryName}")
+        //         }
+        //     }
+        // }
+
+        // stage('Docker Image CleanUp'){
+        // when { expression { params.action == 'create'}}
+        //     steps{
+        //         script{
+        //             dockerImageCleanup("${params.aws_account_id}","${params.region}","${params.ecrRepositoryName}")
+        //         }
+        //     }
+        // }
+
+        stage('Create EKS Cluster: Terraform'){
         when { expression { params.action == 'create'}}
             steps{
                 script{
-                    mvnTest()
-                }
-            }
-        }
-
-        stage('Integration Test Maven'){
-        when { expression { params.action == 'create'}}
-            steps{
-                script{
-                    mvnIntegrationTest()
-                }
-            }
-        }
-
-        stage('Static code analysis: Sonarqube'){
-        when { expression { params.action == 'create'}}
-            steps{
-                script{
-                    def SonarQubeCredentialsId = 'sonarqube-api'
-                    staticCodeAnalysis(SonarQubeCredentialsId)
-                }
-            }
-        }
-
-        stage('Quality Gate Status Check: Sonarqube'){
-        when { expression { params.action == 'create'}}
-            steps{
-                script{
-                    def SonarQubeCredentialsId = 'sonarqube-api'
-                    qualityGateStatus(SonarQubeCredentialsId)
-                }
-            }
-        }
-
-        stage('Maven Build'){
-        when { expression { params.action == 'create'}}
-            steps{
-                script{
-                    mvnBuild()
-                }
-            }
-        }
-
-        stage('Docker Image Build: ECR'){
-        when { expression { params.action == 'create'}}
-            steps{
-                script{
-
-                    dockerBuild("${params.aws_account_id}","${params.region}","${params.ecrRepositoryName}")
-                }
-            }
-        }
-
-        stage('Docker Image Scan Using Trivy for AWS'){
-        when { expression { params.action == 'create'}}
-            steps{
-                script{
-
-                    dockerImageScan("${params.aws_account_id}","${params.region}","${params.ecrRepositoryName}")
-                }
-            }
-        }
-        stage('Docker Image Scan Push: ECR'){
-        when { expression { params.action == 'create'}}
-            steps{
-                script{
-                    dockerImagePush("${params.aws_account_id}","${params.region}","${params.ecrRepositoryName}")
-                }
-            }
-        }
-
-        stage('Docker Image CleanUp'){
-        when { expression { params.action == 'create'}}
-            steps{
-                script{
-                    dockerImageCleanup("${params.aws_account_id}","${params.region}","${params.ecrRepositoryName}")
+                    dir('EKS_module\\project') {
+                        sh """
+                            terraform init 
+                            terraform plan -var 'access_key=${ACCESS_KEY}' -var 'secret_key=${SECRET_KEY}' -var 'region=${params.region}' --var-file=./config/terraform.tfvars
+                            terraform apply -var 'access_key=${ACCESS_KEY}' -var 'secret_key=${SECRET_KEY}' -var 'region=${params.region}' --var-file=./config/terraform.tfvars -auto-approve
+                        """
+                    }
                 }
             }
         }
