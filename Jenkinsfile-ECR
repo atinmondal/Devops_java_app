@@ -12,7 +12,7 @@ pipeline{
         string(name:'region',description: 'Region of the ECR', defaultValue: 'us-east-1')
         string(name:'ecrRepositoryName',description: 'Name of the ECR', defaultValue: 'jenkins-pipeline')
     }
-    environmet{
+    environment{
         ACCESS_KEY = credentials('Access_key_ID')
         SECRET_KEY = credentials('Secret_access_key')
     }
